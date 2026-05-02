@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>资质审批监控</title>
+<style>
+:root {
+  --bg:#f0f2f5;--card:#fff;--primary:#1677ff;--purple:#531dab;
+  --green:#237804;--green-bg:#d9f7be;--orange:#d46b08;--orange-bg:#fff7e6;
+  --red:#a8071a;--red-bg:#fff1f0;--gray:#8c8c8c;--text:#1a1a1a;
+  --text2:#595959;--text3:#8c8c8c;--border:#f0f0f0;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);min-height:100vh;padding-bottom:40px}
+
+.header{background:linear-gradient(135deg,#1677ff,#722ed1);padding:20px 16px 48px;position:relative}
+.header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:32px;background:var(--bg);border-radius:32px 32px 0 0}
+.header h1{color:#fff;font-size:18px;font-weight:900}
+.header p{color:rgba(255,255,255,0.75);font-size:12px;margin-top:4px}
+.badge{display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle}
+
+.stats-wrap{padding:0 12px;margin-top:-16px;position:relative;z-index:1}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat-card{background:#fff;border-radius:12px;padding:12px 6px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;border:2px solid transparent;transition:all 0.2s}
+.stat-card.active{border-color:currentColor}
+.stat-num{font-size:24px;font-weight:900;line-height:1}
+.stat-label{font-size:10px;color:var(--text3);margin-top:3px}
+
+.section{padding:0 12px;margin-top:12px}
+.section-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;padding-left:4px}
+
+.search-box{background:#fff;border-radius:24px;padding:10px 14px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin:10px 12px 0}
+.search-box input{flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--text)}
+.search-box input::placeholder{color:var(--text3)}
+
+.update-bar{padding:8px 16px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:#52c41a;flex-shrink:0}
+
+.card{background:#fff;border-radius:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;border-left:4px solid transparent}
+.card:active{transform:scale(0.99)}
+.card-body{padding:12px 14px}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px}
+.company-name{font-size:15px;font-weight:700;flex:1;padding-right:8px}
+.app-name{font-size:11px;color:var(--text3);margin-top:2px}
+.badge-status{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.info-row{font-size:11px;color:var(--text3);margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap}
+.handler{color:var(--purple);font-weight:600}
+
+.qual-item{padding:5px 8px;border-radius:7px;font-size:11px;margin:3px 0;display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap}
+.qual-name{font-weight:700}
+.qual-level{background:#e6f4ff;color:#1677ff;padding:1px 5px;border-radius:3px;font-size:10px}
+.qual-reason{width:100%;color:var(--red);font-size:10px;margin-top:2px;padding-top:3px;border-top:1px solid rgba(0,0,0,0.06)}
+
+.finish-bar{margin-top:8px;padding:7px 10px;border-radius:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:700}
+.sign-wait{background:var(--orange-bg);color:var(--orange);border:1px solid #ffd591;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.sign-done{background:var(--green-bg);color:var(--green);border:1px solid #95de64;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+
+.tab-bar{display:flex;background:#fff;margin:10px 12px 0;border-radius:12px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.tab-btn{flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;transition:all 0.2s;font-family:inherit}
+.tab-btn.active{background:var(--primary);color:#fff}
+
+.empty{text-align:center;padding:40px 24px;color:var(--text3)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+
+.change-item{background:#fff;border-radius:10px;padding:10px 14px;margin-bottom:6px;border-left:3px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.change-name{font-weight:700;font-size:13px}
+.change-state{font-size:12px;color:var(--primary);margin-top:2px;font-weight:600}
+.change-time{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* 无数据引导 */
+.guide{padding:24px 16px}
+.guide h2{font-size:17px;font-weight:800;color:var(--text2);margin-bottom:8px;text-align:center}
+.guide p{font-size:13px;color:var(--text3);line-height:1.7;text-align:center;margin-bottom:20px}
+.step{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:flex-start;gap:10px}
+.step-num{width:22px;height:22px;background:var(--primary);color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-txt{font-size:13px;color:var(--text2);line-height:1.6}
+.step-txt code{background:#f0f2f5;padding:1px 6px;border-radius:4px;font-size:11px;color:var(--primary)}
+.footer{text-align:center;padding:20px;font-size:11px;color:var(--text3)}
+
+/* 刷新按钮 */
+.refresh-btn{position:fixed;bottom:24px;right:16px;background:var(--primary);color:#fff;border:none;border-radius:50%;width:48px;height:48px;font-size:22px;box-shadow:0 4px 16px rgba(22,119,255,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:999}
+.refresh-btn:active{transform:scale(0.95)}
+</style>
+</head>
+<body>
+
+<div id="no-data">
+  <div class="header">
+    <h1>🏛 资质审批监控 <span class="badge">手机版</span></h1>
+    <p>陕西住建厅 · 批量状态查看</p>
+  </div>
+  <div class="guide">
+    <div style="font-size:56px;text-align:center;margin-bottom:16px">📱</div>
+    <h2>如何同步数据到手机？</h2>
+    <p>在电脑上运行监控脚本后，点击「📱 手机查看」按钮，选择「同步到GitHub」即可</p>
+    <div class="step"><div class="step-num">1</div><div class="step-txt">电脑打开政务网，运行 <code>资质审批监控_v5.4.js</code> 脚本</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-txt">查询完成后点浮窗里的 <code>📱 手机查看</code> 按钮</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-txt">点「同步到GitHub」，数据自动上传</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-txt">手机打开此页面或点右下角 🔄 刷新即可查看</div></div>
+  </div>
+</div>
+
+<div id="has-data" style="display:none">
+  <div class="header">
+    <h1>🏛 资质审批监控 <span class="badge">手机版</span></h1>
+    <p id="h-sub">加载中...</p>
+  </div>
+
+  <div class="stats-wrap">
+    <div class="stats-grid" id="stats-grid"></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('result',this)">查询结果</button>
+    <button class="tab-btn" onclick="switchTab('change',this)">变化记录</button>
+  </div>
+
+  <div id="result-tab">
+    <div class="search-box">
+      <span style="color:var(--text3)">🔍</span>
+      <input type="text" placeholder="搜索公司名 / 经办老师..." oninput="doSearch(this.value)"/>
+    </div>
+    <div class="update-bar"><div class="dot"></div><span id="update-time">-</span></div>
+    <div class="section" id="list-wrap"></div>
+  </div>
+
+  <div id="change-tab" style="display:none">
+    <div class="section" style="margin-top:12px">
+      <div class="section-title">状态变化记录</div>
+      <div id="change-list"></div>
+    </div>
+  </div>
+</div>
+
+<button class="refresh-btn" onclick="loadData()" title="刷新数据">🔄</button>
+<div class="footer">资质审批监控 · GitHub Pages 版</div>
+
+<script>
+const STATE = {
+  0:{label:'待提交',color:'#8c8c8c',bg:'#fafafa',border:'#d9d9d9',lc:'#d9d9d9',order:7},
+  1:{label:'已受理',color:'#531dab',bg:'#f9f0ff',border:'#d3adf7',lc:'#722ed1',order:4},
+  2:{label:'打回',  color:'#a8071a',bg:'#fff1f0',border:'#ffa39e',lc:'#a8071a',order:1},
+  3:{label:'审核中',color:'#ad4e00',bg:'#fff7e6',border:'#ffd591',lc:'#d46b08',order:2},
+  4:{label:'已办结',color:'#237804',bg:'#f6ffed',border:'#b7eb8f',lc:'#237804',order:5},
+  5:{label:'审核通过',color:'#237804',bg:'#f6ffed',border:'#b7eb8f',lc:'#237804',order:3},
+  6:{label:'✅ 办结通过',color:'#135200',bg:'#d9f7be',border:'#95de64',lc:'#237804',order:6},
+};
+const RESULT={'1':'✅ 审批通过','0':'❌ 审批未通过','2':'⚠️ 部分通过'};
+
+let allResults=[],changeLog=[],filterLabel='全部',searchKw='';
+
+// ── 加载数据（从 data.json）──────────────────────────────────
+async function loadData(){
+  try {
+    const res = await fetch(`data.json?t=${Date.now()}`);
+    if (!res.ok) { showNoData(); return; }
+    const data = await res.json();
+    if (!data.r?.length) { showNoData(); return; }
+
+    // 解压缩格式
+    allResults = data.r.map(r=>({
+      comment:r.c||'', fstate:r.s, fresult:r.f, handler:r.h||'',
+      applyTime:r.a||'', acceptTime:r.t||'', finishTime:r.e||'',
+      fname:r.n||'', fupdeptname:r.d||'', fissign:r.g||0,
+      quals:(r.q||[]).map(q=>({qualName:q.n||'',typeName:q.y||'',levelName:q.l||'',status:q.s||'',reason:q.r||'',handler:q.h||''})),
+    }));
+    changeLog = (data.l||[]).map(c=>({comment:c.c,stateLabel:c.s,time:c.t,isFinished:c.f,isPassed:c.p}));
+
+    document.getElementById('no-data').style.display='none';
+    document.getElementById('has-data').style.display='block';
+    document.getElementById('update-time').textContent=`最后更新：${data.t||''}`;
+    document.getElementById('h-sub').textContent=`共 ${allResults.length} 个企业 · ${data.t||''}`;
+    renderStats(); renderList(allResults); renderChangeLog();
+  } catch(e){ showNoData(); }
+}
+
+function showNoData(){
+  document.getElementById('no-data').style.display='block';
+  document.getElementById('has-data').style.display='none';
+}
+
+// ── 统计 ─────────────────────────────────────────────────────
+function renderStats(){
+  const cnt={'全部':allResults.length,'打回':0,'审核中':0,'已受理':0,'办结通过':0,'办结未通':0};
+  allResults.forEach(r=>{
+    if(r.fstate===2||r.quals?.some(q=>q.status==='打回')) cnt['打回']++;
+    else if(r.fstate===3) cnt['审核中']++;
+    else if(r.fstate===1) cnt['已受理']++;
+    else if([4,5,6].includes(r.fstate)){ r.fresult==='1'?cnt['办结通过']++:cnt['办结未通']++; }
+  });
+  const colors={'全部':'#1677ff','打回':'#a8071a','审核中':'#ad4e00','已受理':'#531dab','办结通过':'#237804','办结未通':'#595959'};
+  document.getElementById('stats-grid').innerHTML=Object.entries(cnt).map(([l,n])=>`
+    <div class="stat-card ${filterLabel===l?'active':''}" style="color:${colors[l]}" onclick="doFilter('${l}')">
+      <div class="stat-num" style="color:${colors[l]}">${n}</div>
+      <div class="stat-label">${l}</div>
+    </div>`).join('');
+}
+
+// ── 渲染列表 ─────────────────────────────────────────────────
+function renderList(data){
+  const el=document.getElementById('list-wrap');
+  if(!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>没有符合条件的企业</div>';return;}
+  const sorted=[...data].sort((a,b)=>(STATE[a.fstate]?.order||9)-(STATE[b.fstate]?.order||9));
+  el.innerHTML=sorted.map(r=>renderCard(r)).join('');
+}
+
+function renderCard(r){
+  const s=STATE[r.fstate]||{label:`未知`,color:'#999',bg:'#fafafa',border:'#d9d9d9',lc:'#d9d9d9'};
+  const isFinished=[4,5,6].includes(r.fstate);
+  const hasReject=r.quals?.some(q=>q.status==='打回');
+  const lc=r.fstate===2||hasReject?'#a8071a':isFinished&&r.fresult==='1'?'#237804':r.fstate===3?'#d46b08':r.fstate===1?'#722ed1':'#e8e8e8';
+
+  const qualHtml=!r.quals?.length?'<div style="color:#ccc;font-size:11px">暂无资质节点</div>':
+    r.quals.map(q=>{
+      const qc=q.status==='通过'?'#237804':q.status==='打回'?'#cf1322':'#d46b08';
+      const qbg=q.status==='通过'?'#f6ffed':q.status==='打回'?'#fff1f0':'#fff7e6';
+      return `<div class="qual-item" style="background:${qbg}">
+        <span class="qual-name" style="color:${qc}">▸ ${q.qualName}</span>
+        ${q.levelName?`<span class="qual-level">${q.levelName}</span>`:''}
+        <span style="color:${qc};font-weight:700">【${q.status}】</span>
+        ${q.handler?`<span style="color:#888">👤${q.handler}</span>`:''}
+        ${q.reason?`<div class="qual-reason">↩ 打回原因：${q.reason}</div>`:''}
+      </div>`;
+    }).join('');
+
+  const resultText=r.fstate===2?'❌ 已打回':RESULT[r.fresult]||'';
+  const resultColor=r.fstate===2?'#a8071a':r.fresult==='1'?'#237804':'#a8071a';
+  const finishHtml=isFinished?`
+    <div class="finish-bar" style="background:${r.fstate===2?'#fff1f0':r.fresult==='1'?'#f6ffed':'#fff1f0'}">
+      <span style="color:${resultColor}">${resultText}</span>
+      ${r.finishTime?`<span style="color:#888;font-size:11px;font-weight:400">办结：${r.finishTime}</span>`:''}
+      ${r.fissign===1?'<span class="sign-done">📜 已发证</span>':'<span class="sign-wait">⏳ 待发证</span>'}
+    </div>`:'';
+
+  return `<div class="card" style="border-left-color:${lc}">
+    <div class="card-body">
+      <div class="card-top">
+        <div>
+          <div class="company-name">${r.comment}</div>
+          ${r.fname&&r.fname!==r.comment?`<div class="app-name">${r.fname}</div>`:''}
+        </div>
+        <span class="badge-status" style="background:${s.bg};color:${s.color};border:1px solid ${s.border}">${s.label}</span>
+      </div>
+      <div class="info-row">
+        ${r.applyTime?`<span>📅 ${r.applyTime}</span>`:''}
+        ${r.acceptTime?`<span>📬 ${r.acceptTime}</span>`:''}
+        ${r.handler?`<span>👤 <span class="handler">${r.handler}</span></span>`:''}
+        ${r.fupdeptname?`<span style="color:#bbb">${r.fupdeptname}</span>`:''}
+      </div>
+      ${qualHtml}${finishHtml}
+    </div>
+  </div>`;
+}
+
+// ── 变化记录 ─────────────────────────────────────────────────
+function renderChangeLog(){
+  const el=document.getElementById('change-list');
+  if(!changeLog.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div style="font-size:13px">暂无变化记录</div></div>';return;}
+  el.innerHTML=changeLog.map(c=>`
+    <div class="change-item" style="border-left-color:${c.isFinished&&c.isPassed?'#237804':'#1677ff'};background:${c.isFinished&&c.isPassed?'#f6ffed':'#f0f5ff'}">
+      <div class="change-name">${c.comment}</div>
+      <div class="change-state" style="color:${c.isFinished&&c.isPassed?'#237804':'#1677ff'}">${c.isFinished&&c.isPassed?'🎉':''} → ${c.stateLabel}</div>
+      <div class="change-time">${c.time}</div>
+    </div>`).join('');
+}
+
+function doFilter(label){
+  filterLabel=label; renderStats();
+  let data=allResults;
+  if(label==='打回') data=data.filter(r=>r.fstate===2||r.quals?.some(q=>q.status==='打回'));
+  else if(label==='审核中') data=data.filter(r=>r.fstate===3);
+  else if(label==='已受理') data=data.filter(r=>r.fstate===1);
+  else if(label==='办结通过') data=data.filter(r=>[4,5,6].includes(r.fstate)&&r.fresult==='1');
+  else if(label==='办结未通') data=data.filter(r=>[4,5,6].includes(r.fstate)&&r.fresult!=='1');
+  if(searchKw) data=data.filter(r=>r.comment.includes(searchKw)||r.handler?.includes(searchKw));
+  renderList(data);
+}
+
+function doSearch(kw){
+  searchKw=kw;
+  let data=allResults;
+  if(filterLabel!=='全部') doFilter(filterLabel);
+  else{ if(kw) data=data.filter(r=>r.comment.includes(kw)||r.handler?.includes(kw)); renderList(data); }
+}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('result-tab').style.display=tab==='result'?'block':'none';
+  document.getElementById('change-tab').style.display=tab==='change'?'block':'none';
+}
+
+loadData();
+</script>
+</body>
+</html>
